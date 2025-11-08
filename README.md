@@ -14,6 +14,7 @@ python -m venv venv
 source venv/bin/activate <br>
 
 ## 3. Install Python dependencies
+cd .. <br>
 (Make sure your (venv) is active first and that you are in the project folder with the Python code) <br>
 cd project <br>
 pip install -r requirements.txt <br>
@@ -26,10 +27,12 @@ npm install <br>
 
 # Start the FastAPI server
 ## 1: Start the backend (make sure to be in the project folder)
+cd .. <br>
 cd project <br>
 uvicorn main:app --reload <br>
 (Leave this terminal running. Your backend is now live at http://127.0.0.1:8000) <br>
 ## 2: Start the Frontend App
+cd .. <br>
 cd tattoo-generator <br>
 npm run dev <br>
 (Leave this terminal running. Your app will open in a browser at http://localhost:5173)
