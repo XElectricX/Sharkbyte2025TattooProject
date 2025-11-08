@@ -39,7 +39,7 @@ async def home(request: Request):
 		{"request": request, "result": None, "error": None},
 	)
 
-
+@app.post("/generate-tattoo")
 @app.post("/generate-tattoo/", response_class=HTMLResponse)
 async def generate_tattoo(
 	request: Request,
