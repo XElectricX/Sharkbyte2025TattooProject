@@ -63,9 +63,13 @@ async def generate_tattoo(
 		prompt = f"""
 You are a professional tattoo designer.
 Design a {color_mode} {style} tattoo with the theme "{theme}".
-It should fit naturally as a {size} tattoo on the provided body photo.
-Return both a design concept and an overlay image if possible.
+The tattoo must be overlaid naturally on the provided body photo
+without changing or adding any body parts, faces, skin, or background.
+Do NOT redraw or modify the person — only add the tattoo itself.
+Ensure the tattoo placement and size look realistic for a {size} tattoo.
+Return both a design concept and an overlay image that keeps the original body photo intact.
 """
+
 
 		# --- Call Gemini image model ---
 		response = client.models.generate_content(
