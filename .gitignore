@@ -3,3 +3,13 @@
 __pycache__/
 *.pyc
 venv/
+
+#Node.js & React
+node_modules/
+dist/
+build/
+
+#Logs
+npm-debug.log*
+yarn-error.log*
+yarn-debug.log*
