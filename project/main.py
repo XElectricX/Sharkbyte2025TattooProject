@@ -13,6 +13,12 @@ import os, io, base64
 
 app = FastAPI()
 
+
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
 # Allow frontend access
 app.add_middleware(
     CORSMiddleware,

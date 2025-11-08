@@ -5,37 +5,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Tattoo Designer</title>
   <link rel="stylesheet" href="/static/style.css">
+
 </head>
 <body>
-  <h1>AI Tattoo Designer</h1>
+  <div class="container">
+    <header>
+      <h1>🖋️ AI Tattoo Designer</h1>
+      <p>Upload your photo and let AI design a realistic tattoo overlay.</p>
+    </header>
 
-  <form action="/generate-tattoo/" method="post" enctype="multipart/form-data">
-    <label>Upload a body photo:</label><br>
-    <input type="file" name="photo" accept="image/*" required><br><br>
+    <form action="/generate-tattoo/" method="post" enctype="multipart/form-data" class="form-card">
+      <div class="form-group">
+        <label>Upload a body photo:</label>
+        <input type="file" name="photo" accept="image/*" required>
+      </div>
 
-    <label>Style:</label><br>
-    <input type="text" name="style" placeholder="e.g. tribal, watercolor" required><br><br>
+      <div class="form-group">
+        <label>Style:</label>
+        <input type="text" name="style" placeholder="e.g. tribal, watercolor" required>
+      </div>
 
-    <label>Theme:</label><br>
-    <input type="text" name="theme" placeholder="e.g. phoenix, floral" required><br><br>
+      <div class="form-group">
+        <label>Theme:</label>
+        <input type="text" name="theme" placeholder="e.g. phoenix, floral" required>
+      </div>
 
-    <label>Color Mode:</label><br>
-    <input type="text" name="color_mode" placeholder="e.g. black-and-grey, full color" required><br><br>
+      <div class="form-group">
+        <label>Color Mode:</label>
+        <input type="text" name="color_mode" placeholder="e.g. black-and-grey, full color" required>
+      </div>
 
-    <label>Size:</label><br>
-    <input type="text" name="size" placeholder="e.g. forearm, shoulder" required><br><br>
+      <div class="form-group">
+        <label>Placement / Size:</label>
+        <input type="text" name="size" placeholder="e.g. forearm, shoulder" required>
+      </div>
 
-    <button type="submit">Generate Tattoo</button>
-  </form>
+      <button type="submit" class="generate-btn">🎨 Generate Tattoo</button>
+    </form>
 
-  {% if result %}
-    <h2>Generated Tattoo Design</h2>
-    <p><strong>Idea:</strong> {{ result.idea }}</p>
-    {% if result.image_base64 %}
-      <img src="data:image/png;base64,{{ result.image_base64 }}" alt="Generated Tattoo" style="max-width:400px;">
+    {% if result %}
+      <section class="output">
+        <h2>✨ Generated Tattoo Design</h2>
+        <p><strong>Idea:</strong> {{ result.idea }}</p>
+        {% if result.image_base64 %}
+          <div class="image-display">
+            <img src="data:image/png;base64,{{ result.image_base64 }}" alt="Generated Tattoo">
+          </div>
+        {% endif %}
+      </section>
+    {% elif error %}
+      <h3 class="error">⚠️ Error: {{ error }}</h3>
     {% endif %}
-  {% elif error %}
-    <h3 style="color:red;">Error: {{ error }}</h3>
-  {% endif %}
+  </div>
 </body>
 </html>
