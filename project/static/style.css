@@ -107,8 +107,21 @@ input::file-selector-button:hover {
 }
 
 .image-display {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 25px;
+  flex-wrap: wrap;
   margin-top: 20px;
+}
+
+.img-pair {
+  text-align: center;
+}
+
+.img-pair h3 {
+  color: #ff9100;
+  margin-bottom: 10px;
 }
 
 .image-display img {
@@ -125,4 +138,5 @@ input::file-selector-button:hover {
   padding: 10px 15px;
   border-radius: 8px;
   text-align: center;
+  margin-top: 20px;
 }
