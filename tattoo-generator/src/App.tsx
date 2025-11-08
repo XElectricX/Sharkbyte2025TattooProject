@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react'
 import './App.css'
 import './styles/tattoo.css'
+import ImageSlider from './components/ImageSlider'
+import ToggleSwitch from './components/ToggleSwitch'
 
 // Result shape we expect from the server after generating the tattoo
 // - `idea`: a short text description of the generated tattoo idea
@@ -40,6 +42,10 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // UI toggle: when true show the slider, otherwise show simple uploaded preview.
+  // Default is false so the app shows the uploaded preview by default.
+  const [showSlider, setShowSlider] = useState(false)
 
   // A ref to the native file input so we can clear it programmatically
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -235,15 +241,34 @@ function App() {
         </button>
       </form>
 
-      {/* Local preview of the uploaded image before submitting. Helpful UX. */}
-      {photoPreview && (
-        <div className="output">
-          <h2>📸 Uploaded Photo Preview</h2>
-          <div className="image-display">
-            <img src={photoPreview} alt="Preview" />
-          </div>
-        </div>
-      )}
+      {/* Combined preview/slider area with a toggle switch. If no photoPreview exists
+          we show a helpful muted message and disable the switch. */}
+      <section className="output">
+        <h2>📸 Preview</h2>
+        {photoPreview ? (
+          <>
+            <div className="preview-toggle-bar">
+              <label className="muted-text">Show before / after</label>
+              <ToggleSwitch checked={showSlider} onChange={setShowSlider} disabled={!photoPreview} ariaLabel="Toggle before after slider" />
+            </div>
+
+            {showSlider ? (
+              <ImageSlider
+                beforeSrc={photoPreview!}
+                afterSrc={result?.image_base64 ? `data:image/png;base64,${result.image_base64}` : ''}
+                beforeAlt="Uploaded photo"
+                afterAlt="Generated tattoo"
+              />
+            ) : (
+              <div className="image-display preview-chrome">
+                <img src={photoPreview} alt="Preview" />
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="muted-text">Upload an image to enable the preview and before/after slider.</p>
+        )}
+      </section>
 
       {/* Server-generated result: idea text + generated image (base64). */}
       {result && (

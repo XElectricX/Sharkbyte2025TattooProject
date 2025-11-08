@@ -16,6 +16,10 @@ body {
   max-width: 800px;
   margin: 60px auto;
   padding: 20px;
+  /* Keep a reasonable minimum width so the layout doesn't visually jump
+     when a wide uploaded image appears. This helps avoid the UI feeling
+     much narrower before an image is added (useful when resizing the IDE). */
+  min-width: 640px;
 }
 
 /* Header */
@@ -41,6 +45,12 @@ header p {
   padding: 25px 30px;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  /* Keep the form controls from growing to match very wide images.
+     This constrains the form layout while allowing the preview/slider
+     to occupy more horizontal space. */
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto; /* center the constrained form inside the container */
 }
 
 .form-group {
@@ -118,8 +128,18 @@ input::file-selector-button:hover {
 .image-display img {
   max-width: 100%;
   border-radius: 10px;
-  border: 2px solid #444;
-  box-shadow: 0 0 15px rgba(255, 145, 0, 0.3);
+  /* visual chrome moved to wrapper .preview-chrome to avoid layout differences
+     between the preview and the slider (use box-shadow ring on wrapper). */
+  display: block;
+  line-height: 0;
+}
+
+/* Shared visual chrome for preview and slider. Uses a box-shadow ring to
+   emulate a 2px border plus the orange glow without changing layout. */
+.preview-chrome {
+  border-radius: 10px;
+  box-shadow: 0 0 0 2px #444, 0 0 15px rgba(255, 145, 0, 0.3);
+  display: block; /* use block to avoid inline formatting gaps */
 }
 
 /* Error message */
@@ -133,6 +153,18 @@ input::file-selector-button:hover {
 
 /* Small responsive tweaks */
 @media (max-width: 600px) {
-  .container { margin: 20px; padding: 16px; }
+  .container { margin: 20px; padding: 16px; min-width: auto; }
   header h1 { font-size: 1.6em; }
+}
+
+.muted-text {
+  color: #aaa;
+}
+
+/* small bar used above preview to hold the toggle and label */
+.preview-toggle-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
 }

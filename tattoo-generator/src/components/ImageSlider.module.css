@@ -1,0 +1,119 @@
+/* Minimal, neutral styles for the presentational ImageSlider component.
+   These are intended as a starting point for a before/after slider. */
+
+.container {
+  width: 100%;
+  max-width: 100%; /* let parent (.container) control max width */
+  margin: 0 auto;
+}
+
+/* Make the viewport size itself to the natural image height so the
+   slider image matches the preview image size. Removing the fixed
+   padding-top aspect ratio prevents the slider from constraining
+   images into a smaller framed area. */
+.chrome {
+  /* Non-clipped wrapper that holds the chrome; actual visual chrome is provided
+     by the global .preview-chrome class to guarantee parity with the preview. */
+  border-radius: 10px;
+  background: transparent;
+  margin-top: 20px;
+}
+
+.viewport {
+  position: relative;
+  width: 100%;
+  overflow: hidden; /* keep clipping behavior for slider overlay */
+  border-radius: 8px; /* slight inset so the chrome edge shows */
+  background: #111;
+  /* subtle dark grounding shadow inside the viewport to avoid doubling outer shadow */
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.imageWrap {
+  position: relative;
+  width: 100%;
+  height: auto;
+}
+
+.imageWrap img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Match the preview image styling used in tattoo.css .image-display img */
+.imageWrap img {
+  /* keep image itself unset for chrome — visual border and glow live on .viewport */
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+
+/* spacing now applied to .chrome */
+
+/* The "before" image is the full background */
+.beforeImage {
+  z-index: 1;
+}
+
+/* The "after" image sits above and will be clipped by slider logic */
+.afterImage {
+  z-index: 2;
+  /* By default show the full image; your logic can change clip-path or width */
+}
+
+/* Visual handle - position and dragging to be implemented by the developer */
+.handle {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  bottom: 0;
+  left: 50%; /* default center */
+  width: 2px;
+  background: rgba(255,255,255,0.9);
+  transform: translateX(-1px);
+  pointer-events: none; /* remove until you implement events */
+}
+
+.handleKnob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fff, #ddd);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  pointer-events: none;
+}
+
+/* Labels */
+.labels {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 12px;
+  gap: 12px;
+}
+
+.labelBefore,
+.labelAfter {
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Utility: hidden when you want to show real pointer events */
+.pointerEnabled .handle {
+  pointer-events: all;
+}
