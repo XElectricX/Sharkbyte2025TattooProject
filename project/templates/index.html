@@ -1,71 +1,284 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Tattoo Designer</title>
-  <link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Tattoo Designer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* Basic CSS for the camera components (Assuming style.css handles the rest) */
+        .camera-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+        #video-feed {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            background: #000;
+            display: block;
+            border-radius: 4px;
+        }
+        #canvas {
+            display: none; /* Canvas is hidden, only used for capture */
+        }
+        .capture-btn {
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .capture-btn:hover {
+            background-color: #45a049;
+        }
+        .photo-option {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>🖋️ AI Tattoo Designer</h1>
-      <p>Upload your photo and let AI design a tattoo for that exact spot.</p>
-    </header>
+    <div class="container">
+        <header>
+            <h1>🖋️ AI Tattoo Designer</h1>
+            <p>Upload your photo or capture one with your camera for the AI design.</p>
+        </header>
 
-    <form action="/generate-tattoo/" method="post" enctype="multipart/form-data" class="form-card">
-      <div class="form-group">
-        <label>Upload a body photo:</label>
-        <input type="file" name="photo" accept="image/*" required>
-      </div>
+        <form action="/generate-tattoo/" method="post" enctype="multipart/form-data" class="form-card" id="tattoo-form">
+            <div class="form-group">
+                <label>1. Select/Capture Body Photo:</label>
+                
+                <div class="camera-container">
+                    <p>
+                        <input type="radio" id="option_upload" name="photo_mode" value="upload" checked>
+                        <label for="option_upload">Upload from File</label>
+                    </p>
+                    <p>
+                        <input type="radio" id="option_camera" name="photo_mode" value="camera">
+                        <label for="option_camera">Use Device Camera</label>
+                    </p>
+                    
+                    <div id="upload-section" style="margin-top: 10px;">
+                        <input type="file" name="photo_file_upload" id="photo_file_upload" accept="image/*">
+                    </div>
 
-      <div class="form-group">
-        <label>Style:</label>
-        <input type="text" name="style" placeholder="e.g. tribal, watercolor" required>
-      </div>
+                    <div id="camera-section" style="display:none; margin-top: 10px;">
+                        <video id="video-feed" autoplay></video>
+                        <canvas id="canvas"></canvas>
+                        <div class="photo-option">
+                            <button type="button" id="start-camera" class="generate-btn">Start Camera</button>
+                            <button type="button" id="capture-photo" class="capture-btn" disabled>Take Photo</button>
+                        </div>
+                        <p id="capture-status" style="margin-top: 10px; font-size: 0.9em; color: #555;"></p>
+                    </div>
+                </div>
+                <input type="hidden" name="photo_base64" id="photo-data-input">
 
-      <div class="form-group">
-        <label>Theme:</label>
-        <input type="text" name="theme" placeholder="e.g. phoenix, floral" required>
-      </div>
-
-      <div class="form-group">
-        <label>Color Mode:</label>
-        <input type="text" name="color_mode" placeholder="e.g. black-and-grey, full color" required>
-      </div>
-
-      <div class="form-group">
-        <label>Placement / Size:</label>
-        <input type="text" name="size" placeholder="e.g. forearm, shoulder" required>
-      </div>
-
-      <button type="submit" class="generate-btn">🎨 Generate Tattoo</button>
-    </form>
-
-    {% if result %}
-      <section class="output">
-        <h2>✨ Generated Tattoo Design</h2>
-        <p><strong>Idea:</strong> {{ result.idea }}</p>
-
-        <div class="image-display">
-          {% if result.uploaded_image_base64 %}
-            <div class="img-pair">
-              <h3>Original Image</h3>
-              <img src="data:image/png;base64,{{ result.uploaded_image_base64 }}" alt="Uploaded Image">
+                <!--<input type="hidden" name="photo" id="photo-data-input" required>-->
             </div>
-          {% endif %}
 
-          {% if result.generated_image_base64 %}
-            <div class="img-pair">
-              <h3>Generated Tattoo</h3>
-              <img src="data:image/png;base64,{{ result.generated_image_base64 }}" alt="Generated Tattoo">
+            <div class="form-group">
+                <label>Style:</label>
+                <input type="text" name="style" placeholder="e.g. tribal, watercolor" required>
             </div>
-          {% endif %}
-        </div>
-      </section>
-    {% elif error %}
-      <div class="error">⚠️ Error: {{ error }}</div>
-    {% endif %}
-  </div>
+
+            <div class="form-group">
+                <label>Theme:</label>
+                <input type="text" name="theme" placeholder="e.g. phoenix, floral" required>
+            </div>
+
+            <div class="form-group">
+                <label>Color Mode:</label>
+                <input type="text" name="color_mode" placeholder="e.g. black-and-grey, full color" required>
+            </div>
+
+            <div class="form-group">
+                <label>Placement / Size:</label>
+                <input type="text" name="size" placeholder="e.g. forearm, shoulder" required>
+            </div>
+
+            <button type="submit" class="generate-btn">🎨 Generate Tattoo</button>
+        </form>
+
+        {% if result %}
+            <section class="output">
+                <h2>✨ Generated Tattoo Design</h2>
+                <p><strong>Idea:</strong> {{ result.idea }}</p>
+
+                <div class="image-display">
+                    {% if result.uploaded_image_base64 %}
+                        <div class="img-pair">
+                            <h3>Original Image</h3>
+                            <img src="data:image/png;base64,{{ result.uploaded_image_base64 }}" alt="Uploaded Image">
+                        </div>
+                    {% endif %}
+
+                    {% if result.generated_image_base64 %}
+                        <div class="img-pair">
+                            <h3>Generated Tattoo</h3>
+                            <img src="data:image/png;base64,{{ result.generated_image_base64 }}" alt="Generated Tattoo">
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        {% elif error %}
+            <div class="error">⚠️ Error: {{ error }}</div>
+        {% endif %}
+    </div>
+
+    <script>
+        const video = document.getElementById('video-feed');
+        const canvas = document.getElementById('canvas');
+        const startCameraButton = document.getElementById('start-camera');
+        const captureButton = document.getElementById('capture-photo');
+        const form = document.getElementById('tattoo-form');
+        const photoDataInput = document.getElementById('photo-data-input');
+        const captureStatus = document.getElementById('capture-status');
+        const uploadSection = document.getElementById('upload-section');
+        const cameraSection = document.getElementById('camera-section');
+        const fileUploadInput = document.getElementById('photo_file_upload');
+        let stream = null; // To hold the camera stream
+
+        // --- Mode Switching Logic ---
+        document.querySelectorAll('input[name="photo_mode"]').forEach(radio => {
+            radio.addEventListener('change', (event) => {
+                const mode = event.target.value;
+                if (mode === 'upload') {
+                    uploadSection.style.display = 'block';
+                    cameraSection.style.display = 'none';
+                    //fileUploadInput.setAttribute('required', 'required');
+                    photoDataInput.removeAttribute('required');
+                    stopCamera();
+                } else if (mode === 'camera') {
+                    uploadSection.style.display = 'none';
+                    cameraSection.style.display = 'block';
+                    fileUploadInput.removeAttribute('required');
+                   // photoDataInput.setAttribute('required', 'required');
+                    captureStatus.textContent = "Click 'Start Camera' to begin.";
+                }
+            });
+        });
+
+
+        // --- Camera Control Logic ---
+        
+        // Function to start the camera feed
+        startCameraButton.addEventListener('click', async () => {
+            if (stream) {
+                stopCamera();
+                startCameraButton.textContent = 'Start Camera';
+                captureButton.disabled = true;
+                return;
+            }
+
+            try {
+                // Request camera access (facing mode 'environment' for rear camera on mobile)
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                video.srcObject = stream;
+                video.play();
+                startCameraButton.textContent = 'Stop Camera';
+                captureButton.disabled = false;
+                captureStatus.textContent = "Camera is live. Click 'Take Photo' when ready.";
+            } catch (err) {
+                console.error("Could not start camera: ", err);
+                captureStatus.textContent = "Error: Could not access camera. Check permissions.";
+            }
+        });
+
+        // Function to stop the camera feed
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                video.srcObject = null;
+                startCameraButton.textContent = 'Start Camera';
+                captureButton.disabled = true;
+            }
+        }
+
+        // Function to capture the photo
+        captureButton.addEventListener('click', () => {
+            if (!stream) return;
+
+            // Set canvas dimensions to match the video feed
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            
+            // Draw the current video frame onto the canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert the canvas image to a Blob (File-like object)
+            canvas.toBlob(blob => {
+                // Create a File object from the Blob
+                const capturedFile = new File([blob], "captured_photo.png", { type: "image/png" });
+                
+                // Store the captured file object on the form element for submission
+                form.capturedFile = capturedFile;
+                
+                // Indicate that a photo is ready to be submitted
+                captureStatus.textContent = "Photo captured! Ready to Generate.";
+            }, 'image/png');
+        });
+
+        // --- Form Submission Logic ---
+        form.addEventListener('submit', async (e) => {
+            const mode = document.querySelector('input[name="photo_mode"]:checked').value;
+            
+            if (mode === 'camera' && !form.capturedFile) {
+                // Prevent submission if in camera mode and no photo is taken
+                e.preventDefault();
+                alert("Please take a photo before submitting.");
+                return;
+            }
+            
+            if (mode === 'camera' && form.capturedFile) {
+                // Prevent default submission to manually create FormData
+                e.preventDefault(); 
+
+                const formData = new FormData();
+                
+                // Append the captured file using the name 'photo' expected by FastAPI
+                formData.append('photo', form.capturedFile); 
+                
+                // Append all other form fields
+                formData.append('style', document.querySelector('input[name="style"]').value);
+                formData.append('theme', document.querySelector('input[name="theme"]').value);
+                formData.append('color_mode', document.querySelector('input[name="color_mode"]').value);
+                formData.append('size', document.querySelector('input[name="size"]').value);
+
+                // Use the Fetch API to submit the data
+                try {
+                    const response = await fetch('/generate-tattoo/', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    
+                    // Replace the current document with the response HTML
+                    const html = await response.text();
+                    document.open();
+                    document.write(html);
+                    document.close();
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    alert('An error occurred during submission.');
+                }
+            }
+            // If mode is 'upload', the default form submission handles the file input.
+        });
+        
+        // Clean up camera stream when leaving the page
+        window.addEventListener('beforeunload', stopCamera);
+    </script>
 </body>
 </html>
