@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Tattoo Designer</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>AI Tattoo Designer</h1>
+
+  <form action="/generate-tattoo/" method="post" enctype="multipart/form-data">
+    <label>Upload a body photo:</label><br>
+    <input type="file" name="photo" accept="image/*" required><br><br>
+
+    <label>Style:</label><br>
+    <input type="text" name="style" placeholder="e.g. tribal, watercolor" required><br><br>
+
+    <label>Theme:</label><br>
+    <input type="text" name="theme" placeholder="e.g. phoenix, floral" required><br><br>
+
+    <label>Color Mode:</label><br>
+    <input type="text" name="color_mode" placeholder="e.g. black-and-grey, full color" required><br><br>
+
+    <label>Size:</label><br>
+    <input type="text" name="size" placeholder="e.g. forearm, shoulder" required><br><br>
+
+    <button type="submit">Generate Tattoo</button>
+  </form>
+
+  {% if result %}
+    <h2>Generated Tattoo Design</h2>
+    <p><strong>Idea:</strong> {{ result.idea }}</p>
+    {% if result.image_base64 %}
+      <img src="data:image/png;base64,{{ result.image_base64 }}" alt="Generated Tattoo" style="max-width:400px;">
+    {% endif %}
+  {% elif error %}
+    <h3 style="color:red;">Error: {{ error }}</h3>
+  {% endif %}
+</body>
+</html>
