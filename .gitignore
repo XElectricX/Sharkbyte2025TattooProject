@@ -13,3 +13,6 @@ build/
 npm-debug.log*
 yarn-error.log*
 yarn-debug.log*
+
+#Ignore generated files
+project/generated images/*
