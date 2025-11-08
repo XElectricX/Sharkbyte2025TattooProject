@@ -7,7 +7,10 @@ import os
 
 app = FastAPI()
 
-# this is a change
+# root endpoint
+@app.get("/")
+def read_root():
+    return {"message": "AI Tattoo API is running. Go to /docs to test."}
 
 # allow frontend
 app.add_middleware(
