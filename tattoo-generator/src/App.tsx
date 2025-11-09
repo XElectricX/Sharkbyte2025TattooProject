@@ -44,6 +44,10 @@ function App() {
   const [result, setResult] = useState<Result | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // Session gallery of all generated images in this session
+  const [gallery, setGallery] = useState<Result[]>([])
+
+
   // UI toggle: when true show the slider, otherwise show simple uploaded preview.
   // Default is false so the app shows the uploaded preview by default.
   const [showSlider, setShowSlider] = useState(false)
@@ -136,8 +140,17 @@ function App() {
       if (json.error) {
         setError(String(json.error))
       } else {
-        setResult({ idea: json.idea, image_base64: json.image_base64 })
+        // normalize key name because sometimes backend might send generated_image_base64
+        const thisResult: Result = {
+          idea: json.idea,
+          image_base64: json.generated_image_base64 || json.image_base64,
+        }
+        // show latest
+        setResult(thisResult)
+        // add to session gallery (newest first)
+        setGallery((prev) => [thisResult, ...prev])
       }
+
     } catch (err: unknown) {
       // Narrow `unknown` to Error (safe) for message extraction
       const msg = err instanceof Error ? err.message : String(err)
@@ -464,6 +477,9 @@ function App() {
           )}
         </section>
       )}
+
+      {/* Session gallery — shows all generated tattoos from this session */}
+      <SessionGallery images={gallery} />
 
       {/* Show server or client error messages here */}
       {error && (
