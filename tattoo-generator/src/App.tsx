@@ -6,10 +6,8 @@ import ToggleSwitch from './components/ToggleSwitch'
 import SessionGallery from './components/Gallery'
 
 // Result shape we expect from the server after generating the tattoo
-// - `idea`: a short text description of the generated tattoo idea
 // - `image_base64`: a base64-encoded PNG image we can embed in an <img>
 type Result = {
-  idea?: string
   image_base64?: string
 }
 
@@ -24,7 +22,7 @@ type Result = {
  * - let the user pick a photo (file input) and preview it locally
  * - collect text inputs (style, theme, color_mode, physical_attributes)
  * - POST the data as FormData to `/generate-tattoo/`
- * - show loading, error, and the returned generated image/idea
+ * - show loading, error, and the returned generated image
  */
 function App() {
   // --- Local UI state ---
@@ -135,14 +133,13 @@ function App() {
         throw new Error(text || `Request failed with status ${resp.status}`)
       }
 
-      // Expect JSON: either { error } or { idea, image_base64 }
+      // Expect JSON: either { error } or { image_base64 }
       const json = await resp.json()
       if (json.error) {
         setError(String(json.error))
       } else {
         // normalize key name because sometimes backend might send generated_image_base64
         const thisResult: Result = {
-          idea: json.idea,
           image_base64: json.generated_image_base64 || json.image_base64,
         }
         // show latest
@@ -466,9 +463,6 @@ function App() {
       {result && (
         <section className="output">
           <h2>✨ Generated Tattoo Design</h2>
-          <p>
-            <strong>Idea:</strong> {result.idea}
-          </p>
           {result.image_base64 && (
             <div className="image-display">
               {/* embed PNG image returned as base64 */}
