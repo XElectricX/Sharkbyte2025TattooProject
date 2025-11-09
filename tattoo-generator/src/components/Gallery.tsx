@@ -1,0 +1,51 @@
+/**
+ * SessionGallery — displays all generated tattoo images from the current session.
+ *
+ * - Receives an array of Result objects ({ idea?, image_base64? }) from the parent.
+ * - Renders thumbnails in a consistent grid layout.
+ * - Matches the same code and comment style as App.tsx.
+ */
+
+/** Shape of each generated result passed in from App.tsx */
+type Result = {
+  idea?: string
+  image_base64?: string
+}
+
+/** Props accepted by SessionGallery */
+type SessionGalleryProps = {
+  images: Result[]
+}
+
+function SessionGallery({ images }: SessionGalleryProps) {
+  // --- Early return if there are no images ---
+  if (!images || images.length === 0) return null
+
+  // --- Render ---
+  return (
+    <section className="output">
+      <h2>🖼️ This session’s generations</h2>
+
+      <div className="image-display" style={{ gap: '1rem', flexWrap: 'wrap' }}>
+        {images.map((img, idx) =>
+          img.image_base64 ? (
+            <div key={idx} style={{ textAlign: 'center' }}>
+              <img
+                src={`data:image/png;base64,${img.image_base64}`}
+                alt={img.idea ? img.idea : `Generated ${idx + 1}`}
+                style={{ maxWidth: '180px', borderRadius: '8px', marginBottom: '0.5rem' }}
+              />
+              {img.idea && (
+                <p className="muted-text" style={{ fontSize: '0.8rem', margin: 0 }}>
+                  {img.idea}
+                </p>
+              )}
+            </div>
+          ) : null
+        )}
+      </div>
+    </section>
+  )
+}
+
+export default SessionGallery

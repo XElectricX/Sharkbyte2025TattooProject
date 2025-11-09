@@ -3,6 +3,7 @@ import './App.css'
 import './styles/tattoo.css'
 import ImageSlider from './components/ImageSlider'
 import ToggleSwitch from './components/ToggleSwitch'
+import SessionGallery from './components/Gallery'
 
 // Result shape we expect from the server after generating the tattoo
 // - `idea`: a short text description of the generated tattoo idea
