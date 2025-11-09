@@ -138,7 +138,7 @@ Return both a design concept and an overlay image that keeps the original body p
 			{
 				"request": request,
 				"result": {
-					"idea": description,
+					#"idea": description,
 					"uploaded_image_base64": uploaded_image_base64,
 					"generated_image_base64": generated_image_base64,
 					"style": style,
