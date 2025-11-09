@@ -216,6 +216,9 @@ async def alter_tattoo(request: Request):
     - the last generated image (base64)
     - context fields: style, theme, color mode, size
     """
+	# <-- seeing if moving this out prioritizes critiques
+
+
     try:
         # Parse JSON request body
         data = await request.json()
@@ -257,6 +260,7 @@ async def alter_tattoo(request: Request):
             "",
             "Input data:",
             "- Image: The previously generated tattoo overlay on the body (provided as input).",
+			"- Original Image: The photo of the body part provided by the user prior to tattoo generation.",
         ]
 
         # Add tattoo details dynamically if present
@@ -266,8 +270,8 @@ async def alter_tattoo(request: Request):
             lines.append(f"- Theme: {theme}")
         if color_mode:
             lines.append(f"- Color Mode: {color_mode}")
-        if size:
-            lines.append(f"- Tattoo Size / Placement Notes: {size}")
+        #if size:
+        #    lines.append(f"- Tattoo Size / Placement Notes: {size}")
 
         lines.append("")
         lines.append("User feedback (the requested changes):")
@@ -276,6 +280,9 @@ async def alter_tattoo(request: Request):
         lines.append("Apply the feedback carefully to adjust or improve the tattoo while keeping it realistic.")
         lines.append("Return only the new tattoo overlay image that integrates naturally with the original photo.")
         lines.append("Do not include any text or description in the generated image.")
+      #  lines.append("Prioritize user feedback over the originally specified details should the user request changes to size, theme, color, or style.")		
+       # lines.append("Do not modify the original image except to add the tattoo design.")		
+        
 
         prompt = "\n".join(lines)
 
