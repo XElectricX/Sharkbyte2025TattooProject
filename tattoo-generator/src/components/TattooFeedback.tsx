@@ -81,8 +81,8 @@ const TattooFeedback: React.FC<Props> = ({
       : 'https://https://aitattoo.design//alter-tattoo/';  // live Cloudflare endpoint*/
 
       const url = isLocal
-  ? '/alter-tattoo/'                      // local FastAPI route
-  : import.meta.env.VITE_API_URL || '/alter-tattoo/'
+  ? '/alter-tattoo'                      // local FastAPI route
+  : import.meta.env.VITE_API_URL || '/alter-tattoo'
 
       console.log('Debug - Request URL:', url)
 
