@@ -47,7 +47,7 @@ async def generate_tattoo(
 	style: str = Form(...),
 	theme: str = Form(...),
 	color_mode: str = Form(...),
-	size: str = Form(...),
+	physical_attributes: str = Form(...),
 ):
 	try:
 		# --- Read uploaded image ---
@@ -61,13 +61,17 @@ async def generate_tattoo(
 
 		# --- Build prompt ---
 		prompt = f"""
-You are a professional tattoo designer.
-Design a {color_mode} {style} tattoo with the theme "{theme}".
-The tattoo must be overlaid naturally on the provided body photo
-without changing or adding any body parts, faces, skin, or background.
-Do NOT redraw or modify the person — only add the tattoo itself.
-Ensure the tattoo placement and size look realistic for a {size} tattoo.
-Return both a design concept and an overlay image that keeps the original body photo intact.
+You generate images of tattoos overlayed on skin of submitted images.
+Based on the provided input data, create a tattoo design that fits naturally on the body part shown.
+Input data:
+- Photo: An attached image of a body part (can be a hand, arm, leg, face, etc.)
+- Theme (general description of tattoo): {theme}
+- Style (artistic style of tattoo): {style}
+- Color Mode (examples: black and white, rainbow color, monochrome, etc.): {color_mode}
+- Physical Attributes (description related to approximate size and/or placement on the body part shown): {physical_attributes}
+
+Do not generate any text in your response. Your response should only consist of a generated image.
+Do not modify the original image except to add the tattoo design.
 """
 
 
@@ -77,7 +81,7 @@ Return both a design concept and an overlay image that keeps the original body p
 			contents=[prompt, user_image],
 		)
 
-		description = ""
+		generated_text = ""
 		generated_image_base64 = None
 
 		# --- Parse parts ---
@@ -85,7 +89,7 @@ Return both a design concept and an overlay image that keeps the original body p
 		for part in parts:
 				# Text part
 				if getattr(part, "text", None):
-					description += part.text
+					generated_text += part.text
 				# Image part
 				elif getattr(part, "inline_data", None):
 					img_data = part.inline_data.data
@@ -119,15 +123,12 @@ Return both a design concept and an overlay image that keeps the original body p
 						# Fallback — directly base64-encode raw bytes (guard if None)
 						generated_image_base64 = base64.b64encode(img_data or b"").decode()
 
-		if not description:
-			description = "AI returned an image but no description."
-
 		# If the client expects JSON (our React frontend sets Accept: application/json),
 		# return a compact JSON payload the frontend expects. Otherwise render the HTML page.
 		accept = request.headers.get("accept", "")
 		if "application/json" in accept:
 			return JSONResponse({
-				"idea": description,
+				"generated_text": generated_text,
 				# Frontend expects `image_base64` key (single image); map accordingly
 				"image_base64": generated_image_base64,
 			})
@@ -144,7 +145,7 @@ Return both a design concept and an overlay image that keeps the original body p
 					"style": style,
 					"theme": theme,
 					"color_mode": color_mode,
-					"size": size,
+					"size": physical_attributes,
 				},
 				"error": None,
 			},

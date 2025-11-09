@@ -22,7 +22,7 @@ type Result = {
  *
  * High-level responsibilities:
  * - let the user pick a photo (file input) and preview it locally
- * - collect text inputs (style, theme, color_mode, size)
+ * - collect text inputs (style, theme, color_mode, physical_attributes)
  * - POST the data as FormData to `/generate-tattoo/`
  * - show loading, error, and the returned generated image/idea
  */
@@ -37,7 +37,7 @@ function App() {
   const [styleText, setStyleText] = useState('')
   const [themeText, setThemeText] = useState('')
   const [colorMode, setColorMode] = useState('')
-  const [sizeText, setSizeText] = useState('')
+  const [physicalAttributes, setPhysicalAttributes] = useState('')
 
   // Loading / result / error state
   const [loading, setLoading] = useState(false)
@@ -111,7 +111,7 @@ function App() {
     form.append('style', styleText)
     form.append('theme', themeText)
     form.append('color_mode', colorMode)
-    form.append('size', sizeText)
+    form.append('physical_attributes', physicalAttributes)
 
     setLoading(true)
     try {
@@ -171,7 +171,7 @@ function App() {
     setStyleText('')
     setThemeText('')
     setColorMode('')
-    setSizeText('')
+    setPhysicalAttributes('')
     setResult(null)
     setError(null)
     // The only reliable way to fully clear a controlled file input is to
@@ -392,13 +392,13 @@ function App() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="size">Placement / Size:</label>
+          <label htmlFor="physical_attributes">Placement / Size:</label>
           <input
-            id="size"
+            id="physical_attributes"
             type="text"
-            name="size"
-            value={sizeText}
-            onChange={(e) => setSizeText(e.target.value)}
+            name="physical_attributes"
+            value={physicalAttributes}
+            onChange={(e) => setPhysicalAttributes(e.target.value)}
             placeholder="e.g. forearm, shoulder"
             required
           />
