@@ -19,17 +19,31 @@ if not API_KEY:
 client = genai.Client(api_key=API_KEY)
 
 # -------------------- FastAPI Setup --------------------
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.middleware import Middleware
+
+# Configure a higher maximum size for form data
+class LargeRequestMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        if request.method == "POST":
+            # Set max size to 10MB
+            request._max_receive_size = 1024 * 1024 * 10
+        return await call_next(request)
+
 app = FastAPI()
 os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+# Add middlewares
 app.add_middleware(
-	CORSMiddleware,
-	allow_origins=["*"],
-	allow_methods=["*"],
-	allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+app.add_middleware(LargeRequestMiddleware)
 
 # -------------------- Routes --------------------
 @app.get("/", response_class=HTMLResponse)
@@ -149,9 +163,130 @@ Return both a design concept and an overlay image that keeps the original body p
 				"error": None,
 			},
 		)
-
+    
 	except Exception as e:
 		return templates.TemplateResponse(
 			"index.html",
 			{"request": request, "result": None, "error": str(e)},
 		)
+
+# -------------------- Tattoo Alteration Route --------------------
+
+from fastapi import File, Form, UploadFile, Request, HTTPException, Body
+from typing import Dict, Any
+
+@app.post("/alter-tattoo")
+@app.post("/alter-tattoo/", response_class=JSONResponse)
+async def alter_tattoo(request: Request):
+    """
+    Modify the existing tattoo image according to user feedback.
+    The user sends:
+    - feedback: requested changes
+    - the last generated image (base64)
+    - context fields: style, theme, color mode, size
+    """
+    try:
+        # Parse JSON request body
+        data = await request.json()
+        
+        # Extract fields
+        feedback = data.get('feedback')
+        style = data.get('style')
+        theme = data.get('theme')
+        color_mode = data.get('color_mode')
+        size = data.get('size')
+        generated_image_base64 = data.get('generated_image_base64')
+
+        # Validate required fields
+        if not all([feedback, style, theme, color_mode, size, generated_image_base64]):
+            return JSONResponse({"error": "Missing required fields"}, status_code=400)
+        print("Debug - Received fields:")
+        print(f"feedback: {feedback[:100]}...")
+        print(f"style: {style}")
+        print(f"theme: {theme}")
+        print(f"color_mode: {color_mode}")
+        print(f"size: {size}")
+        print(f"generated_image_base64 length: {len(generated_image_base64)}")
+        
+        # --- Decode the previous tattoo image ---
+        try:
+            image_bytes = base64.b64decode(generated_image_base64)
+            prev_image = Image.open(BytesIO(image_bytes))
+        except Exception as e:
+            print(f"Debug - Image decode error: {str(e)}")
+            return JSONResponse({"error": f"Invalid image data: {str(e)}"}, status_code=400)
+
+		# --- Build the alteration prompt ---
+        # --- Build the alteration prompt ---
+        prompt = f"""
+You are a professional tattoo designer.
+Modify the existing tattoo overlay according to the feedback below.
+
+Tattoo details:
+- Style: {style}
+- Theme: {theme}
+- Color mode: {color_mode}
+- Size: {size}
+
+User feedback:
+"{feedback}"
+
+Make the tattoo alteration realistic and consistent with the existing photo.
+Do NOT alter the person, skin tone, lighting, or background.
+Only change the tattoo itself.
+Return an updated overlay image discarding the old render, that maintains realism.
+"""
+
+        # --- Call Gemini image model again ---
+        print("Debug - Sending prompt to Gemini:")
+        print(prompt)
+        
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-image",
+            contents=[prompt, prev_image],
+        )
+        
+        print("Debug - Got response from Gemini")
+        print(f"Response type: {type(response)}")
+        
+        description = ""
+        altered_image_base64 = None
+
+        # --- Parse response parts ---
+        parts = getattr(response, "parts", []) or []
+        print(f"Debug - Number of response parts: {len(parts)}")
+        
+        for part in parts:
+            if getattr(part, "text", None):
+                print("Debug - Found text part")
+                description += part.text
+            elif getattr(part, "inline_data", None):
+                print("Debug - Found image part")
+                img_data = part.inline_data.data
+                try:
+                    img = Image.open(BytesIO(img_data))
+                    print(f"Debug - Successfully loaded image: {img.size}, {img.mode}")
+                    buffer = BytesIO()
+                    img.save(buffer, "PNG")
+                    altered_image_base64 = base64.b64encode(buffer.getvalue()).decode()
+                    print("Debug - Successfully encoded altered image")
+                except Exception as e:
+                    print(f"Debug - Error processing image: {str(e)}")
+                    altered_image_base64 = base64.b64encode(img_data or b"").decode()
+
+        if not altered_image_base64:
+            return JSONResponse({"error": "No altered image returned by the model"}, status_code=500)
+
+        # Verify we have valid image data before sending
+        if altered_image_base64:
+            print(f"Debug - Returning altered image (length: {len(altered_image_base64)})")
+        else:
+            print("Debug - No altered image data available!")
+            
+        return JSONResponse({
+            "idea": description or "Altered tattoo generated successfully.",
+            "image_base64": altered_image_base64,
+        })
+
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)

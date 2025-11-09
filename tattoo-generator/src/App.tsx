@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import TattooFeedback from './components/TattooFeedback'
 import './App.css'
 import './styles/tattoo.css'
 import ImageSlider from './components/ImageSlider'
@@ -483,6 +484,27 @@ const API_URL = isLocal
               <img src={`data:image/png;base64,${result.image_base64}`} alt="Generated Tattoo" />
             </div>
           )}
+
+          {/* Tattoo alteration feedback component */}  
+          {result?.image_base64 && (
+            <TattooFeedback
+              currentImageBase64={result.image_base64}
+              style={styleText}
+              theme={themeText}
+              colorMode={colorMode}
+              size={sizeText}
+              isLocal={isLocal}
+              apiBaseUrl={import.meta.env.VITE_API_URL}
+              onAlterComplete={(newResult) => {
+                setResult(newResult)
+                setGallery((prev) => [newResult, ...prev])
+              }}
+              onError={(msg) => setError(msg)}
+            />
+          )}
+
+
+
         </section>
       )}
 
