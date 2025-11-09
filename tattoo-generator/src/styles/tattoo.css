@@ -175,6 +175,25 @@ input::file-selector-button:hover {
   display: none;
 }
 
+/* Reference uploader helpers */
+.ref-uploader {
+  margin-bottom: 12px;
+}
+.ref-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.ref-preview-gap {
+  margin-bottom: 8px;
+}
+
+/* Ensure reset buttons inside the compact reference action row don't get
+   extra top margin that we apply globally for other reset buttons. */
+.ref-actions .reset-btn {
+  margin-top: 0;
+}
+
 /* small layout for the camera toggle next to the file input */
 .camera-toggle-bar {
   margin-top: 10px;

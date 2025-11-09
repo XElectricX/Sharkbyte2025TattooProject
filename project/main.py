@@ -2,6 +2,7 @@ import os
 import base64
 from io import BytesIO
 from dotenv import load_dotenv
+from typing import Optional
 from fastapi import FastAPI, File, Form, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -44,6 +45,7 @@ async def home(request: Request):
 async def generate_tattoo(
 	request: Request,
 	photo: UploadFile = File(...),
+	reference: Optional[UploadFile] = File(None),
 	style: str = Form(...),
 	theme: str = Form(...),
 	color_mode: str = Form(...),
@@ -59,26 +61,58 @@ async def generate_tattoo(
 		user_image.save(upload_buffer, "PNG")
 		uploaded_image_base64 = base64.b64encode(upload_buffer.getvalue()).decode()
 
-		# --- Build prompt ---
-		prompt = f"""
-You generate images of tattoos overlayed on skin of submitted images.
-Based on the provided input data, create a tattoo design that fits naturally on the body part shown.
-Input data:
-- Photo: An attached image of a body part (can be a hand, arm, leg, face, etc.)
-- Theme (general description of tattoo): {theme}
-- Style (artistic style of tattoo): {style}
-- Color Mode (examples: black and white, rainbow color, monochrome, etc.): {color_mode}
-- Physical Attributes (description related to approximate size and/or placement on the body part shown): {physical_attributes}
+		# --- Build prompt dynamically to avoid empty fields ---
+		lines = [
+			"You generate images of tattoos overlayed on skin of submitted images.",
+			"Based on the provided input data, create a tattoo design that fits naturally on the body part shown.",
+			"Input data:",
+			"- Photo: An attached image of a body part (can be a hand, arm, leg, face, etc.)",
+		]
 
-Do not generate any text in your response. Your response should only consist of a generated image.
-Do not modify the original image except to add the tattoo design.
-"""
+		# If a reference image is provided, instruct the model to use it as
+		# the design inspiration.
+		if reference is not None:
+			lines.append("- Reference Image: An attached image that serves as the inspiration for the tattoo design. Use it as the primary reference for style/subject where appropriate.")
 
+		# Always include any textual style hints that were provided. Even when
+		# a reference image is present we should still honor explicit fields
+		# like style or color_mode (for example: "black and white").
+		if theme:
+			if reference is None:
+				lines.append(f"- Theme (general description of tattoo): {theme}")
+			else:
+				# If both theme and style are provided
+				lines.append(f"- Theme (supplementary details for the tattoo based off the chosen reference image): {theme}")
+		if style:
+			lines.append(f"- Style (artistic style of tattoo): {style}")
+		if color_mode:
+			lines.append(f"- Color Mode (examples: black and white, rainbow color, monochrome, etc.): {color_mode}")
+
+		if physical_attributes:
+			lines.append(f"- Physical Attributes (size/placement): {physical_attributes}")
+
+		lines.append("")
+		lines.append("Do not generate any text in your response. Your response should only consist of a generated image.")
+		lines.append("Do not modify the original image except to add the tattoo design.")
+
+		prompt = "\n".join(lines)
 
 		# --- Call Gemini image model ---
+		contents = [prompt, user_image]
+		# If a reference image file was uploaded, include it as an additional
+		# content item so the model can use it as inspiration.
+		if reference is not None:
+			try:
+				ref_bytes = await reference.read()
+				ref_img = Image.open(BytesIO(ref_bytes))
+				contents.append(ref_img)
+			except Exception:
+				# ignore reference read errors and continue without it
+				pass
+
 		response = client.models.generate_content(
 			model="gemini-2.5-flash-image",
-			contents=[prompt, user_image],
+			contents=contents,
 		)
 
 		generated_text = ""
