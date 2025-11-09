@@ -496,14 +496,14 @@ const API_URL = isLocal
             </div>
           )}
 
-          {/* Tattoo alteration feedback component */}  
+          {/* Tattoo alteration feedback component */}
           {result?.image_base64 && (
             <TattooFeedback
               currentImageBase64={result.image_base64}
               style={styleText}
               theme={themeText}
               colorMode={colorMode}
-              size={sizeText}
+              physicalAttributes={physicalAttributes}
               isLocal={isLocal}
               apiBaseUrl={import.meta.env.VITE_API_URL}
               onAlterComplete={(newResult) => {

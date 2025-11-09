@@ -8,7 +8,7 @@ type Props = {
   style: string
   theme: string
   colorMode: string
-  size: string
+  physicalAttributes: string
   // Callback to update parent state after successful alteration
   onAlterComplete: (result: { idea?: string; image_base64?: string }) => void
   // Whether to use local or remote API
@@ -23,7 +23,7 @@ const TattooFeedback: React.FC<Props> = ({
   style,
   theme,
   colorMode,
-  size,
+  physicalAttributes: size,
   onAlterComplete,
   isLocal = true,
   apiBaseUrl = '',
@@ -74,10 +74,10 @@ const TattooFeedback: React.FC<Props> = ({
         ...payload,
         generated_image_base64: payload.generated_image_base64.substring(0, 50) + '...',
       })
-      
+
       const url = isLocal ? '/alter-tattoo/' : `${apiBaseUrl}/alter-tattoo/`
       console.log('Debug - Request URL:', url)
-      
+
       const resp = await fetch(url, {
         method: 'POST',
         headers: {
@@ -85,11 +85,11 @@ const TattooFeedback: React.FC<Props> = ({
         },
         body: JSON.stringify(payload),
       })
-      
+
       console.log('Response status:', resp.status)
       const responseText = await resp.text()
       console.log('Debug - Full response:', responseText)
-      
+
       if (!resp.ok) {
         console.error('Error response:', responseText)
         throw new Error(responseText)
