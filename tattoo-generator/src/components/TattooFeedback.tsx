@@ -75,7 +75,11 @@ const TattooFeedback: React.FC<Props> = ({
         generated_image_base64: payload.generated_image_base64.substring(0, 50) + '...',
       })
 
-      const url = isLocal ? '/alter-tattoo/' : `${apiBaseUrl}/alter-tattoo/`
+      /*const url = isLocal ? '/alter-tattoo/' : `${apiBaseUrl}/alter-tattoo/`*/
+      const url = isLocal 
+      ? 'http://localhost:8000/alter-tattoo/'  // local FastAPI dev server
+      : 'https://https://aitattoo.design//alter-tattoo/';  // live Cloudflare endpoint
+
       console.log('Debug - Request URL:', url)
 
       const resp = await fetch(url, {
