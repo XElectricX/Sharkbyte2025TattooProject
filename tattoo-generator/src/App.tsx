@@ -60,6 +60,14 @@ function App() {
   // A ref to the native file input so we can clear it programmatically
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
+  // Detect environment (local vs deployed)
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+
+// Choose the correct API base URL
+const API_URL = isLocal
+  ? '/generate-tattoo/'                      // local FastAPI route
+  : import.meta.env.VITE_API_URL || '/generate-tattoo/' // fallback for safety
+
   /**
    * onFileChange
    * - Called when the user selects (or clears) a file in the file input.
@@ -122,7 +130,7 @@ function App() {
       // Use a relative path so the dev server proxy (vite) or production
       // host will route the request correctly. We set Accept: application/json
       // so the backend returns JSON for the SPA.
-      const resp = await fetch('/generate-tattoo/', {
+      const resp = await fetch(API_URL, {
         method: 'POST',
         // Ask the server to return JSON when possible
         headers: { Accept: 'application/json' },

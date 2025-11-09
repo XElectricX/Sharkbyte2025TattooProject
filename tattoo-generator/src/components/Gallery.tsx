@@ -35,11 +35,6 @@ function SessionGallery({ images }: SessionGalleryProps) {
                 alt={img.idea ? img.idea : `Generated ${idx + 1}`}
                 style={{ maxWidth: '180px', borderRadius: '8px', marginBottom: '0.5rem' }}
               />
-              {img.idea && (
-                <p className="muted-text" style={{ fontSize: '0.8rem', margin: 0 }}>
-                  {img.idea}
-                </p>
-              )}
             </div>
           ) : null
         )}
