@@ -1,0 +1,29 @@
+/* Gallery.module.css
+ * Styles for the SessionGallery component.
+ * - Uses CSS Grid for a responsive thumbnail layout.
+ * - Matches the visual tone of the app (dark, clean, rounded corners).
+ */
+
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-items: center;
+}
+
+.galleryItem img {
+  width: 100%;
+  max-width: 180px;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #444;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.galleryItem img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(255, 145, 0, 0.3);
+}

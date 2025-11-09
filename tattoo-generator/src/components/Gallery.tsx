@@ -1,3 +1,5 @@
+import styles from './Gallery.module.css'
+
 /**
  * SessionGallery — displays all generated tattoo images from the current session.
  *
@@ -26,14 +28,13 @@ function SessionGallery({ images }: SessionGalleryProps) {
     <section className="output">
       <h2>🖼️ This session’s generations</h2>
 
-      <div className="image-display" style={{ gap: '1rem', flexWrap: 'wrap' }}>
+      <div className={styles.galleryGrid}>
         {images.map((img, idx) =>
           img.image_base64 ? (
-            <div key={idx} style={{ textAlign: 'center' }}>
+            <div key={idx} className={styles.galleryItem}>
               <img
                 src={`data:image/png;base64,${img.image_base64}`}
                 alt={img.idea ? img.idea : `Generated ${idx + 1}`}
-                style={{ maxWidth: '180px', borderRadius: '8px', marginBottom: '0.5rem' }}
               />
             </div>
           ) : null
