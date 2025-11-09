@@ -68,8 +68,8 @@ const isLocal = window.location.hostname === 'localhost' || window.location.host
 
 // Choose the correct API base URL
 const API_URL = isLocal
-  ? '/generate-tattoo/'                      // local FastAPI route
-  : import.meta.env.VITE_API_URL || '/generate-tattoo/' // fallback for safety
+  ? ''                      // local FastAPI route added when used
+  : import.meta.env.VITE_API_URL || '' // deployed URL from environment
 
   /**
    * onFileChange
@@ -140,7 +140,7 @@ const API_URL = isLocal
       // Use a relative path so the dev server proxy (vite) or production
       // host will route the request correctly. We set Accept: application/json
       // so the backend returns JSON for the SPA.
-      const resp = await fetch(API_URL, {
+      const resp = await fetch(`${API_URL}/generate-tattoo/`, {
         method: 'POST',
         // Ask the server to return JSON when possible
         headers: { Accept: 'application/json' },
@@ -505,7 +505,7 @@ const API_URL = isLocal
               colorMode={colorMode}
               physicalAttributes={physicalAttributes}
               isLocal={isLocal}
-              apiBaseUrl={import.meta.env.VITE_API_URL}
+              apiBaseUrl={API_URL}
               onAlterComplete={(newResult) => {
                 setResult(newResult)
                 setGallery((prev) => [newResult, ...prev])
