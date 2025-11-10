@@ -68,9 +68,17 @@ const isLocal =
 window.location.hostname === 'localhost' || 
 window.location.hostname === '127.0.0.1'
 
-// Construct API base URL and trim trailing slashes
-const rawBase = isLocal ? '' : import.meta.env.VITE_API_URL || ''
-const API_BASE = rawBase.replace(/\/+$/, '')
+// try to read Vite env and trim any trailing slash
+const envBase = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace(/\/+$/, '')
+  : ''
+
+// final base:
+// - local: call FastAPI directly (relative path)
+// - deployed: use envBase, and if that's missing, fall back to your Render URL
+const API_BASE = isLocal
+  ? '' // will call /generate-tattoo/ on localhost:5173 -> Vite proxy or same origin
+  : envBase || 'https://sharkbyte2025tattooproject.onrender.com'
 
   /**
    * onFileChange
@@ -141,12 +149,17 @@ const API_BASE = rawBase.replace(/\/+$/, '')
       // Use a relative path so the dev server proxy (vite) or production
       // host will route the request correctly. We set Accept: application/json
       // so the backend returns JSON for the SPA.
-      const resp = await fetch(`${API_BASE}/generate-tattoo/`, {
-        method: 'POST',
-        // Ask the server to return JSON when possible
-        headers: { Accept: 'application/json' },
-        body: form,
-      })
+      const resp = await fetch(
+        isLocal
+          ? '/generate-tattoo/'
+          : `${API_BASE}/generate-tattoo/`,
+        {
+          method: 'POST',
+          // Ask the server to return JSON when possible
+          headers: { Accept: 'application/json' },
+          body: form,
+        }
+      )
 
       // If the server returns a non-2xx status, surface the body as an error
       if (!resp.ok) {
