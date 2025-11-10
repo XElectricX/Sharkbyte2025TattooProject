@@ -1,94 +1,82 @@
-// src/components/TattooFeedback.tsx
 import React, { useState } from 'react'
+import styles from './TattooFeedback.module.css'
 
-type Props = {
-  // Base64 of the currently generated tattoo
+type TattooFeedbackProps = {
+  // current tattoo image (base64, from the last generation)
   currentImageBase64: string
-  // Tattoo generation context
+  // context from the original prompt
   style: string
   theme: string
   colorMode: string
   physicalAttributes: string
-  // Callback to update parent state after successful alteration
+  // called when backend returns a new altered image
   onAlterComplete: (result: { idea?: string; image_base64?: string }) => void
-  // Whether to use local or remote API
+  // tells us whether we’re hitting localhost or the deployed backend
   isLocal?: boolean
+  // if you want to force a base URL from the parent (i.e. Cloudflare env)
   apiBaseUrl?: string
-  // Optional error setter from parent
+  // pass-through error setter
   onError?: (msg: string) => void
 }
 
-const TattooFeedback: React.FC<Props> = ({
+const TattooFeedback: React.FC<TattooFeedbackProps> = ({
   currentImageBase64,
   style,
   theme,
   colorMode,
-  physicalAttributes: size,
+  physicalAttributes,
   onAlterComplete,
   isLocal = true,
-  apiBaseUrl = isLocal
-  ? '/alter-tattoo'                      // local FastAPI route
-  : import.meta.env.VITE_API_URL || '/alter-tattoo',
+  apiBaseUrl,
   onError,
 }) => {
   const [feedbackText, setFeedbackText] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleAlter = async (e: React.FormEvent) => {
+  // pick final base URL
+  // - local → just call /alter-tattoo/
+  // - remote → use the one passed in, or Vite’s, then trim extra slashes
+  const remoteBase =
+    apiBaseUrl ||
+    (typeof import.meta !== 'undefined' ? import.meta.env.VITE_API_URL : '') ||
+    ''
+  const remoteBaseTrimmed = remoteBase.replace(/\/+$/, '')
+
+  const endpoint = isLocal ? '/alter-tattoo/' : `${remoteBaseTrimmed}/alter-tattoo/`
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!currentImageBase64) {
       onError?.('No tattoo available to alter.')
       return
     }
     if (!feedbackText.trim()) {
-      onError?.('Please enter feedback for alteration.')
+      onError?.('Please describe the change you want.')
       return
     }
 
-    setLoading(true)
-    onError?.('') // clear old error
-
-    // First, validate the base64 image data
-    let base64Data = currentImageBase64
-    if (base64Data.includes(',')) {
-      // If it's a data URL, extract just the base64 part
-      base64Data = base64Data.split(',')[1]
-    } else {
-      // If it's already base64, remove any data URL prefix just in case
-      base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '')
+    // normalize base64: remove data URL prefix if user passed full data URI
+    let normalizedBase64 = currentImageBase64
+    if (normalizedBase64.includes(',')) {
+      normalizedBase64 = normalizedBase64.split(',')[1]
     }
+    normalizedBase64 = normalizedBase64.replace(/^data:image\/\w+;base64,/, '')
 
-    // Create JSON payload
     const payload = {
       feedback: feedbackText,
       style,
       theme,
       color_mode: colorMode,
-      size,
-      generated_image_base64: base64Data,
+      size: physicalAttributes,
+      generated_image_base64: normalizedBase64,
     }
 
+    setLoading(true)
+    onError?.('')
+
     try {
-      console.log('Debug - currentImageBase64:', currentImageBase64.substring(0, 50) + '...')
-      console.log('Debug - validated base64Data:', base64Data.substring(0, 50) + '...')
-      console.log('Submitting alteration with feedback:', feedbackText)
-      console.log('JSON data being sent:', {
-        ...payload,
-        generated_image_base64: payload.generated_image_base64.substring(0, 50) + '...',
-      })
-
-      /*const url = isLocal ? '/alter-tattoo/' : `${apiBaseUrl}/alter-tattoo/`
-      const url = isLocal 
-      ? 'http://localhost:8000/alter-tattoo/'  // local FastAPI dev server
-      : 'https://https://aitattoo.design//alter-tattoo/';  // live Cloudflare endpoint*/
-
-      const url = isLocal
-  ? '/alter-tattoo'                      // local FastAPI route
-  : import.meta.env.VITE_API_URL || '/alter-tattoo'
-
-      console.log('Debug - Request URL:', url)
-
-      const resp = await fetch(url, {
+      const resp = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,28 +84,24 @@ const TattooFeedback: React.FC<Props> = ({
         body: JSON.stringify(payload),
       })
 
-      console.log('Response status:', resp.status)
-      const responseText = await resp.text()
-      console.log('Debug - Full response:', responseText)
+      const text = await resp.text()
 
       if (!resp.ok) {
-        console.error('Error response:', responseText)
-        throw new Error(responseText)
+        onError?.(text || `Alter request failed (${resp.status})`)
+        return
       }
 
-      const json = JSON.parse(responseText)
+      const json = JSON.parse(text)
 
       if (json.error) {
         onError?.(String(json.error))
         return
       }
 
-      const newResult = {
+      onAlterComplete({
         idea: json.idea,
         image_base64: json.image_base64,
-      }
-
-      onAlterComplete(newResult)
+      })
       setFeedbackText('')
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
@@ -128,18 +112,28 @@ const TattooFeedback: React.FC<Props> = ({
   }
 
   return (
-    <form onSubmit={handleAlter} className="form-card feedback-form">
-      <h3>💬 Request an alteration</h3>
+    <form onSubmit={handleSubmit} className={styles.wrapper}>
+      <div className={styles.headerRow}>
+        <div className={styles.title}>
+          <span className={styles.emoji}>🛠️</span>
+          <span>Refine this tattoo</span>
+        </div>
+        <button type="submit" className={styles.actionButton} disabled={loading}>
+          {loading ? 'Updating…' : 'Apply change'}
+        </button>
+      </div>
+
+      <p className={styles.helper}>
+        Describe how you want to adjust this result. We’ll send that to the model and update the overlay.
+      </p>
+
       <textarea
+        className={styles.textarea}
         value={feedbackText}
         onChange={(e) => setFeedbackText(e.target.value)}
-        placeholder="e.g. Make the tattoo smaller and move it to the forearm"
+        placeholder="e.g. make the tattoo smaller, reduce the blue, move it higher on the forearm"
         rows={3}
-        required
       />
-      <button type="submit" className="generate-btn" disabled={loading}>
-        {loading ? 'Updating...' : '🔁 Apply Alteration'}
-      </button>
     </form>
   )
 }

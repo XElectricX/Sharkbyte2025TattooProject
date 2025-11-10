@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
-import TattooFeedback from './components/TattooFeedback'
 import './App.css'
 import './styles/tattoo.css'
 import ImageSlider from './components/ImageSlider'
 import ToggleSwitch from './components/ToggleSwitch'
 import SessionGallery from './components/Gallery'
 import ReferenceUploader from './components/ReferenceUploader'
+import TattooFeedback from './components/TattooFeedback'
 
 // Result shape we expect from the server after generating the tattoo
 // - `image_base64`: a base64-encoded PNG image we can embed in an <img>
@@ -64,12 +64,13 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // Detect environment (local vs deployed)
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+const isLocal = 
+window.location.hostname === 'localhost' || 
+window.location.hostname === '127.0.0.1'
 
-// Choose the correct API base URL
-const API_URL = isLocal
-  ? ''                      // local FastAPI route added when used
-  : import.meta.env.VITE_API_URL || '' // deployed URL from environment
+// Construct API base URL and trim trailing slashes
+const rawBase = isLocal ? '' : import.meta.env.VITE_API_URL || ''
+const API_BASE = rawBase.replace(/\/+$/, '')
 
   /**
    * onFileChange
@@ -140,7 +141,7 @@ const API_URL = isLocal
       // Use a relative path so the dev server proxy (vite) or production
       // host will route the request correctly. We set Accept: application/json
       // so the backend returns JSON for the SPA.
-      const resp = await fetch(`${API_URL}/generate-tattoo/`, {
+      const resp = await fetch(`${API_BASE}/generate-tattoo/`, {
         method: 'POST',
         // Ask the server to return JSON when possible
         headers: { Accept: 'application/json' },
@@ -505,7 +506,7 @@ const API_URL = isLocal
               colorMode={colorMode}
               physicalAttributes={physicalAttributes}
               isLocal={isLocal}
-              apiBaseUrl={API_URL}
+              apiBaseUrl={API_BASE}
               onAlterComplete={(newResult) => {
                 setResult(newResult)
                 setGallery((prev) => [newResult, ...prev])
